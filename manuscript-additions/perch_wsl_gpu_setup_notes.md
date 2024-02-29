@@ -179,4 +179,3 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
         If correctly configured, TensorFlow should now be able to utilize the GPU for computations.
 
 **Note**: It's crucial to ensure the correct paths are added to `LD_LIBRARY_PATH` to avoid potential conflicts between different CUDA or cuDNN versions installed on your system.
-
