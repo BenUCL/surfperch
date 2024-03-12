@@ -115,6 +115,7 @@ Conclusion:
     average but found results did not respond consistantly if these were changed.
 - Perch seems to have small set up cost which is negligible when inferencing over real world applicable 
     lengths (hrs not seconds to mins), but is the slowest overall.
+- TODO: take an average
 
 Results (run on: 13th Gen Intel(R) Core(TM) i9-13900H)
 # 1min, 1 thread, batch size = 32
