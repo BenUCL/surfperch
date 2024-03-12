@@ -1,4 +1,4 @@
-# 1hr, 16 threads, 32 sampels per batch
+# 1hr audio, 16 threads, 32 samples per batch
 YAMNet batch processing time: 39.59995937347412 seconds
 VGGish batch processing time: 46.19326400756836 seconds
 BirdNET batch processing time: 9.334291696548462 seconds
