@@ -171,7 +171,7 @@ VGGish batch processing time: 84.35902094841003 seconds
 BirdNET batch processing time: 8.598920345306396 seconds
 Perch batch processing time: 198.33394289016724 seconds
 
-# 1hr of audio 16 threads, batch size = 32
+# 1hr of audio 16 threads, batch size = 32 <--- USE THIS
 YAMNet batch processing time: 44.121607065200806 seconds
 VGGish batch processing time: 56.96380305290222 seconds
 BirdNET batch processing time: 11.815330028533936 seconds
