@@ -114,9 +114,9 @@ Conclusion:
 - Used 1 hr of audio and 16 threads to be as close to real world as possible. 1 hr also provides a better
     average but found results did not respond consistantly if these were changed.
 - Perch seems to have small set up cost which is negligible when inferencing over real world applicable 
-    lengths (hrs not seconds to mins). 
+    lengths (hrs not seconds to mins), but is the slowest overall.
 
-Results
+Results (run on: 13th Gen Intel(R) Core(TM) i9-13900H)
 # 1min, 1 thread, batch size = 32
 YAMNet batch processing time: 0.7852568626403809 seconds
 VGGish batch processing time: 1.7051284313201904 seconds
@@ -171,7 +171,7 @@ VGGish batch processing time: 84.35902094841003 seconds
 BirdNET batch processing time: 8.598920345306396 seconds
 Perch batch processing time: 198.33394289016724 seconds
 
-# 1hr of audio 16 threads, batch size = 32 <--- USE THIS
+# 1hr of audio 16 threads, batch size = 32 <--- USE THIS? 
 YAMNet batch processing time: 44.121607065200806 seconds
 VGGish batch processing time: 56.96380305290222 seconds
 BirdNET batch processing time: 11.815330028533936 seconds
