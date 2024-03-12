@@ -8,7 +8,7 @@ from chirp.inference import interface
 from chirp.inference import models
 from ml_collections import config_dict
 
-# So standardise threads used here.
+# Standardise threads used here.
 num_threads = 16
 tf.config.threading.set_intra_op_parallelism_threads(num_threads)
 
