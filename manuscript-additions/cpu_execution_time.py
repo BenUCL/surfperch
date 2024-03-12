@@ -1,137 +1,90 @@
-import tensorflow as tf
-import tensorflow_hub as hub
+
 import numpy as np
+import os
 import time
-
-# class AudioModelInference:
-#     def __init__(self) -> None:
-#         self.yamnet_model = hub.load('https://tfhub.dev/google/yamnet/1')
-#         self.vggish_model = hub.load('https://tfhub.dev/google/vggish/1')
-#         self.perch_model = hub.load('https://www.kaggle.com/models/google/bird-vocalization-classifier/frameworks/TensorFlow2/variations/bird-vocalization-classifier/versions/4')
-
-#     def time_inference_yamnet_vggish(self, model, audio: np.ndarray) -> float:
-#         start_time = time.time()
-#         _ = model(audio)
-#         return time.time() - start_time
-
-#     def time_inference_perch(self, audio: np.ndarray, batch_processing: bool = False) -> float:
-#         total_time = 0.0
-#         segment_length = 5 * 32000  # 5 seconds at 32 kHz
-#         segments = np.array_split(audio, len(audio) // segment_length)
-
-#         if not batch_processing:
-#             # Process each segment individually
-#             for segment in segments:
-#                 if segment.shape[0] < segment_length:
-#                     continue  # Skip the last segment if it is shorter than expected
-#                 start_time = time.time()
-#                 logits, embeddings = self.perch_model.infer_tf(segment[np.newaxis, :])
-#                 total_time += time.time() - start_time
-#         else:
-#             # Batch processing
-#             segments = [segment for segment in segments if segment.shape[0] == segment_length]
-#             batch = np.stack(segments)
-#             start_time = time.time()
-#             logits, embeddings = self.perch_model.infer_tf(batch)
-#             total_time += time.time() - start_time
-        
-#         return total_time
-
-#     def run(self) -> None:
-#         five_minutes_16khz = np.zeros(5 * 60 * 16000, dtype=np.float32)
-#         five_minutes_32khz = np.zeros(5 * 60 * 32000, dtype=np.float32)
-        
-#         yamnet_time = self.time_inference_yamnet_vggish(self.yamnet_model, five_minutes_16khz)
-#         print(f"YAMNet processing time for 5 minutes of audio: {yamnet_time} seconds")
-
-#         vggish_time = self.time_inference_yamnet_vggish(self.vggish_model, five_minutes_16khz)
-#         print(f"VGGish processing time for 5 minutes of audio: {vggish_time} seconds")
-
-#         perch_time = self.time_inference_perch(five_minutes_32khz, batch_processing=True)
-#         print(f"Perch processing time for 5 minutes of audio with batch processing: {perch_time} seconds")
-
-#         perch_time = self.time_inference_perch(five_minutes_32khz, batch_processing=True)
-#         print(f"Perch processing time for 5 minutes of audio with batch processing: {perch_time} seconds")
-
-# # Usage
-# inference = AudioModelInference()
-# inference.run()
-
 import tensorflow as tf
-import numpy as np
-import time
+from chirp.inference import embed_lib
+from chirp.inference import interface
+from chirp.inference import models
+from ml_collections import config_dict
 
-class AudioModelInference:
-    def __init__(self) -> None:
-        self.yamnet_model = hub.load('https://tfhub.dev/google/yamnet/1')
-        # VGGish loading from a placeholder URL, adjust if there's a specific method required
-        self.vggish_model = hub.load('https://tfhub.dev/google/vggish/1')
-        # Load the Perch model directly from the provided Kaggle URL
-        self.perch_model = hub.load('https://www.kaggle.com/models/google/bird-vocalization-classifier/frameworks/TensorFlow2/variations/bird-vocalization-classifier/versions/4')
+# By default TF gobbles the max num of threads, meaning VGGish and YAMNet will use this. So standardise threads here.
+num_threads = 1
+tf.config.threading.set_intra_op_parallelism_threads(num_threads)
 
-    def time_inference_yamnet_vggish(self, model, audio: np.ndarray) -> float:
-        # YAMNet and VGGish can directly process the entire audio
-        start_time = time.time()
-        _ = model(audio)
-        return time.time() - start_time
+# Find base diectory path
+base_dir = os.getenv('BASE_DIR')
+if not base_dir:
+    raise ValueError("BASE_DIR environment variable is not set.")
 
-    def time_inference_perch(self, model, audio: np.ndarray) -> float:
-        # Perch processes audio in 5-second clips
-        total_time = 0.0
-        segment_length = 5 * 32000  # 5 seconds at 32 kHz
-        segments = np.array_split(audio, len(audio) // segment_length)
-        
-        for segment in segments:
-            if segment.shape[0] < segment_length:
-                continue  # Skip the last segment if it is shorter than expected
-            start_time = time.time()
-            logits, embeddings = model.infer_tf(segment[np.newaxis, :])
-            total_time += time.time() - start_time
-        return total_time
+# BirdNET model path
+birdnet_model_path = os.path.join(base_dir, 'ucl_perch/models/birdnet/V2.3/BirdNET_GLOBAL_3K_V2.3_Model_FP32.tflite')
+perch_model_path = os.path.join(base_dir, 'ucl_perch/models/perch')
 
-    def run(self) -> None:
-        five_minutes_16khz = np.zeros(5 * 60 * 16000, dtype=np.float32)  # For YAMNet and VGGish
-        five_minutes_32khz = np.zeros(5 * 60 * 32000, dtype=np.float32)  # For Perch
-        
-        yamnet_time = self.time_inference_yamnet_vggish(self.yamnet_model, five_minutes_16khz)
-        print(f"YAMNet processing time for 5 minutes of audio: {yamnet_time} seconds")
+# Create 10 min of audio
+sample_rate = 16000
+duration = 600
+audio_sample = np.random.rand(duration * sample_rate).astype(np.float32)  # Generating random noise as a placeholder.
 
-        vggish_time = self.time_inference_yamnet_vggish(self.vggish_model, five_minutes_16khz)
-        print(f"VGGish processing time for 5 minutes of audio: {vggish_time} seconds")
+# VGGish set up
+vggish_model = models.TFHubModel.vggish()
 
-        perch_time = self.time_inference_perch(self.perch_model, five_minutes_32khz)
-        print(f"Perch processing time for 5 minutes of audio: {perch_time} seconds")
+# YAMNet set up
+yamnet_model = models.TFHubModel.yamnet()
 
-# Usage
-inference = AudioModelInference()
-inference.run()
+# BirdNET set up
+config = config_dict.ConfigDict()
+config.model_path = birdnet_model_path
+config.sample_rate = 48000  
+config.window_size_s = 3.0  
+config.hop_size_s = 3.0  
+config.num_tflite_threads = num_threads
+config.class_list_name = 'birdnet_v2_1'  
+birdnet_model = models.BirdNet.from_config(config)
 
-# Batch run perch
-def time_inference_perch(model, audio: np.ndarray) -> float:
+# Perch set up
+config = config_dict.ConfigDict()
+config.model_path = perch_model_path
+config.sample_rate = 32000 
+config.window_size_s = 5.0  
+config.hop_size_s = 5.0   
+perch_model = models.TaxonomyModelTF.from_config(config)
+
+def batch_measure_inference_time_general(model: interface.EmbeddingModel, audio: np.ndarray, batch_size: int, window_size_s: float) -> float:
+    segment_length = int(window_size_s * model.sample_rate)
+    
+    # Calculate the total length that is divisible by segment_length
+    divisible_length = len(audio) - (len(audio) % segment_length)
+    
+    # Trim the audio to the nearest lower multiple of segment_length
+    audio_trimmed = audio[:divisible_length]
+    
+    # Ensure the audio is segmented based on the window_size_s for the specific model
+    audio_batch = audio_trimmed.reshape((-1, segment_length))
+    
+    # Process each batch
     total_time = 0.0
-    segment_length = 5 * 32000  # 5 seconds at 32 kHz
-    
-    # Split the audio into 5-second segments
-    segments = np.array_split(audio, len(audio) // segment_length)
-    
-    # Remove any segment that isn't the correct length (likely the last one)
-    segments = [segment for segment in segments if segment.shape[0] == segment_length]
-    
-    # Stack the segments into a single numpy array for batch processing
-    batch = np.stack(segments)
-    
-    start_time = time.time()
-    # Assume model.infer_tf can handle batch processing
-    logits, embeddings = model.infer_tf(batch)
-    total_time += time.time() - start_time
+    for start_idx in range(0, audio_batch.shape[0], batch_size):
+        end_idx = min(start_idx + batch_size, audio_batch.shape[0])
+        batch = audio_batch[start_idx:end_idx]
+        
+        # Padding the last batch if it is smaller than the batch size
+        if batch.shape[0] < batch_size:
+            padding = np.zeros((batch_size - batch.shape[0], segment_length))
+            batch = np.concatenate([batch, padding], axis=0)
+        
+        start_time = time.time()
+        model.batch_embed(batch)
+        total_time += time.time() - start_time
     
     return total_time
 
-perch = hub.load('https://www.kaggle.com/models/google/bird-vocalization-classifier/frameworks/TensorFlow2/variations/bird-vocalization-classifier/versions/4')
-waveform_32khz = np.zeros(5 * 32000, dtype=np.float32)
-
-total_time = time_inference_perch(perch, waveform_32khz)
-print(f'Perch batch time for 5 min of audio: {total_time}')
-
-### TODO: put perch function in class + add birdnet + add cpue type
-
+# For a model expecting 5-second windows
+yamnet_batch_time = batch_measure_inference_time_general(yamnet_model, audio_sample, 64, 1)
+vggish_batch_time = batch_measure_inference_time_general(vggish_model, audio_sample, 64, 1)
+birdnet_batch_time = batch_measure_inference_time_general(birdnet_model, audio_sample, 64, 3.0)
+perch_batch_time = batch_measure_inference_time_general(perch_model, audio_sample, 64, 5.0)
+print(f"YAMNet batch processing time: {yamnet_batch_time} seconds")
+print(f"VGGish batch processing time: {vggish_batch_time} seconds")
+print(f"BirdNET batch processing time: {birdnet_batch_time} seconds")
+print(f"Perch batch processing time: {perch_batch_time} seconds")
