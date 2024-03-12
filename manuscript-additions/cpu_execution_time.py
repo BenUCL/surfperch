@@ -1,15 +1,15 @@
+# Create audio, batch it then speed test models
 
 import numpy as np
 import os
 import time
 import tensorflow as tf
-from chirp.inference import embed_lib
 from chirp.inference import interface
 from chirp.inference import models
 from ml_collections import config_dict
 
-# By default TF gobbles the max num of threads, meaning VGGish and YAMNet will use this. So standardise threads here.
-num_threads = 1
+# So standardise threads used here.
+num_threads = 16
 tf.config.threading.set_intra_op_parallelism_threads(num_threads)
 
 # Find base diectory path
@@ -21,9 +21,9 @@ if not base_dir:
 birdnet_model_path = os.path.join(base_dir, 'ucl_perch/models/birdnet/V2.3/BirdNET_GLOBAL_3K_V2.3_Model_FP32.tflite')
 perch_model_path = os.path.join(base_dir, 'ucl_perch/models/perch')
 
-# Create 10 min of audio
+# Create audio sample
 sample_rate = 16000
-duration = 600
+duration = 3600
 audio_sample = np.random.rand(duration * sample_rate).astype(np.float32)  # Generating random noise as a placeholder.
 
 # VGGish set up
@@ -50,17 +50,37 @@ config.window_size_s = 5.0
 config.hop_size_s = 5.0   
 perch_model = models.TaxonomyModelTF.from_config(config)
 
-def batch_measure_inference_time_general(model: interface.EmbeddingModel, audio: np.ndarray, batch_size: int, window_size_s: float) -> float:
+def time_batch_inference(model: interface.EmbeddingModel, audio: np.ndarray, batch_size: int, window_size_s: float) -> float:
+    """
+    Measures the total inference time for processing audio batches using the specified model.
+
+    Args:
+    - model: The model implementing the batch_embed method for batch processing.
+    - audio: 1D numpy array of audio samples, normalized between -1.0 and 1.0.
+    - batch_size: Number of audio segments per batch.
+    - window_size_s: Duration of each audio segment in seconds, defining segment length.
+
+    The function trims the audio to be divisible by the segment length, reshapes it into batches,
+    applies padding if necessary, and aggregates the processing time for all batches.
+
+    Returns:
+    - The total processing time in seconds for all batches.
+    """
     segment_length = int(window_size_s * model.sample_rate)
     
-    # Calculate the total length that is divisible by segment_length
+    # Trim audio to be divisible by the segment length
     divisible_length = len(audio) - (len(audio) % segment_length)
-    
-    # Trim the audio to the nearest lower multiple of segment_length
     audio_trimmed = audio[:divisible_length]
     
     # Ensure the audio is segmented based on the window_size_s for the specific model
     audio_batch = audio_trimmed.reshape((-1, segment_length))
+    
+    # Calculate padding for final batch if needed
+    final_batch_size = audio_batch.shape[0] % batch_size
+    needs_padding = final_batch_size > 0
+    if needs_padding:
+        padding_amount = batch_size - final_batch_size
+        padding = np.zeros((padding_amount, segment_length))
     
     # Process each batch
     total_time = 0.0
@@ -68,9 +88,8 @@ def batch_measure_inference_time_general(model: interface.EmbeddingModel, audio:
         end_idx = min(start_idx + batch_size, audio_batch.shape[0])
         batch = audio_batch[start_idx:end_idx]
         
-        # Padding the last batch if it is smaller than the batch size
-        if batch.shape[0] < batch_size:
-            padding = np.zeros((batch_size - batch.shape[0], segment_length))
+        # Apply padding to the last batch if necessary
+        if needs_padding and end_idx >= audio_batch.shape[0]:
             batch = np.concatenate([batch, padding], axis=0)
         
         start_time = time.time()
@@ -80,11 +99,87 @@ def batch_measure_inference_time_general(model: interface.EmbeddingModel, audio:
     return total_time
 
 # For a model expecting 5-second windows
-yamnet_batch_time = batch_measure_inference_time_general(yamnet_model, audio_sample, 64, 1)
-vggish_batch_time = batch_measure_inference_time_general(vggish_model, audio_sample, 64, 1)
-birdnet_batch_time = batch_measure_inference_time_general(birdnet_model, audio_sample, 64, 3.0)
-perch_batch_time = batch_measure_inference_time_general(perch_model, audio_sample, 64, 5.0)
+yamnet_batch_time = time_batch_inference(yamnet_model, audio_sample, 32, 1)
+vggish_batch_time = time_batch_inference(vggish_model, audio_sample, 32, 1)
+birdnet_batch_time = time_batch_inference(birdnet_model, audio_sample, 32, 3.0)
+perch_batch_time = time_batch_inference(perch_model, audio_sample, 32, 5.0)
 print(f"YAMNet batch processing time: {yamnet_batch_time} seconds")
 print(f"VGGish batch processing time: {vggish_batch_time} seconds")
 print(f"BirdNET batch processing time: {birdnet_batch_time} seconds")
 print(f"Perch batch processing time: {perch_batch_time} seconds")
+
+
+"""
+Conclusion:
+- Used 1 hr of audio and 16 threads to be as close to real world as possible. 1 hr also provides a better
+    average but found results did not respond consistantly if these were changed.
+- Perch seems to have small set up cost which is negligible when inferencing over real world applicable 
+    lengths (hrs not seconds to mins). 
+
+Results
+# 1min, 1 thread, batch size = 32
+YAMNet batch processing time: 0.7852568626403809 seconds
+VGGish batch processing time: 1.7051284313201904 seconds
+BirdNET batch processing time: 0.8993425369262695 seconds
+Perch batch processing time: 18.492371797561646 seconds
+
+# 1min, 1 thread, batch size = 64
+YAMNet batch processing time: 0.7237632274627686 seconds
+VGGish batch processing time: 1.6222598552703857 seconds
+BirdNET batch processing time: 1.7326409816741943 seconds
+Perch batch processing time: 35.36127805709839 seconds
+
+# 1min, 16 thread, batch size = 32
+YAMNet batch processing time: 0.9655618667602539 seconds
+VGGish batch processing time: 0.9875094890594482 seconds
+BirdNET batch processing time: 1.0375113487243652 seconds
+Perch batch processing time: 9.27872896194458 seconds
+
+# 1min, 16 thread, batch size = 64
+YAMNet batch processing time: 0.9360687732696533 seconds
+VGGish batch processing time: 0.9795386791229248 seconds
+BirdNET batch processing time: 2.038900375366211 seconds
+Perch batch processing time: 13.970347881317139 seconds
+
+# 10 min audio 1 thread, batch size = 32
+YAMNet batch processing time: 4.531564235687256 seconds
+VGGish batch processing time: 14.502497911453247 seconds
+BirdNET batch processing time: 2.1539978981018066 seconds
+Perch batch processing time: 35.88314342498779 seconds
+
+# 10 min audio 1 thread, batch size = 64
+YAMNet batch processing time: 4.718485116958618 seconds
+VGGish batch processing time: 15.175119161605835 seconds
+BirdNET batch processing time: 3.06388783454895 seconds
+Perch batch processing time: 36.73869490623474 seconds
+
+# 10 min 16 threads, batch size = 32
+YAMNet batch processing time: 6.805267810821533 seconds
+VGGish batch processing time: 9.90481686592102 seconds
+BirdNET batch processing time: 2.9302189350128174 seconds
+Perch batch processing time: 17.076513051986694 seconds
+
+# 10 min 16 threads, batch size = 64
+YAMNet batch processing time: 7.30564546585083 seconds
+VGGish batch processing time: 9.924951791763306 seconds
+BirdNET batch processing time: 4.025118112564087 seconds
+Perch batch processing time: 15.414696455001831 seconds
+
+# 1hr of audio 1 thread, batch size = 32
+YAMNet batch processing time: 26.373422622680664 seconds
+VGGish batch processing time: 84.35902094841003 seconds
+BirdNET batch processing time: 8.598920345306396 seconds
+Perch batch processing time: 198.33394289016724 seconds
+
+# 1hr of audio 16 threads, batch size = 32
+YAMNet batch processing time: 44.121607065200806 seconds
+VGGish batch processing time: 56.96380305290222 seconds
+BirdNET batch processing time: 11.815330028533936 seconds
+Perch batch processing time: 93.90980958938599 seconds
+
+# 1hr of audio 16 threads, batch size = 64
+YAMNet batch processing time: 44.54791569709778 seconds
+VGGish batch processing time: 57.272849798202515 seconds
+BirdNET batch processing time: 12.709004402160645 seconds
+Perch batch processing time: 77.0139672756195 seconds
+"""
