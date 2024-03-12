@@ -1,0 +1,25 @@
+# 1hr, 16 threads, 32 sampels per batch
+YAMNet batch processing time: 39.59995937347412 seconds
+VGGish batch processing time: 46.19326400756836 seconds
+BirdNET batch processing time: 9.334291696548462 seconds
+Perch batch processing time: 86.65660071372986 seconds
+
+YAMNet batch processing time: 40.89688587188721 seconds
+VGGish batch processing time: 45.45742917060852 seconds
+BirdNET batch processing time: 9.24274468421936 seconds
+Perch batch processing time: 85.28248858451843 seconds
+
+YAMNet batch processing time: 40.63325262069702 seconds
+VGGish batch processing time: 46.330511808395386 seconds
+BirdNET batch processing time: 9.371476173400879 seconds
+Perch batch processing time: 86.43029522895813 seconds
+
+YAMNet batch processing time: 40.596759557724 seconds
+VGGish batch processing time: 45.91116118431091 seconds
+BirdNET batch processing time: 9.332324504852295 seconds
+Perch batch processing time: 85.38702273368835 seconds
+
+YAMNet batch processing time: 40.0645866394043 seconds
+VGGish batch processing time: 45.54004502296448 seconds
+BirdNET batch processing time: 9.181315183639526 seconds
+Perch batch processing time: 86.46261835098267 seconds
