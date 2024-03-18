@@ -23,3 +23,82 @@ YAMNet batch processing time: 40.0645866394043 seconds
 VGGish batch processing time: 45.54004502296448 seconds
 BirdNET batch processing time: 9.181315183639526 seconds
 Perch batch processing time: 86.46261835098267 seconds
+
+
+
+
+Conclusion:
+- Used 1 hr of audio and 16 threads to be as close to real world as possible (above). 1 hr also provides a better
+    average.
+- Below, found threads and batch size impacts results in inconsistant ways.
+- Perch seems to have small set up cost which is negligible when inferencing over real world applicable 
+    lengths (hrs not seconds to mins), but is the slowest overall.
+- TODO: take an average
+
+Results (run on: 13th Gen Intel(R) Core(TM) i9-13900H)
+# 1min, 1 thread, batch size = 32
+YAMNet batch processing time: 0.7852568626403809 seconds
+VGGish batch processing time: 1.7051284313201904 seconds
+BirdNET batch processing time: 0.8993425369262695 seconds
+Perch batch processing time: 18.492371797561646 seconds
+
+# 1min, 1 thread, batch size = 64
+YAMNet batch processing time: 0.7237632274627686 seconds
+VGGish batch processing time: 1.6222598552703857 seconds
+BirdNET batch processing time: 1.7326409816741943 seconds
+Perch batch processing time: 35.36127805709839 seconds
+
+# 1min, 16 thread, batch size = 32
+YAMNet batch processing time: 0.9655618667602539 seconds
+VGGish batch processing time: 0.9875094890594482 seconds
+BirdNET batch processing time: 1.0375113487243652 seconds
+Perch batch processing time: 9.27872896194458 seconds
+
+# 1min, 16 thread, batch size = 64
+YAMNet batch processing time: 0.9360687732696533 seconds
+VGGish batch processing time: 0.9795386791229248 seconds
+BirdNET batch processing time: 2.038900375366211 seconds
+Perch batch processing time: 13.970347881317139 seconds
+
+# 10 min audio 1 thread, batch size = 32
+YAMNet batch processing time: 4.531564235687256 seconds
+VGGish batch processing time: 14.502497911453247 seconds
+BirdNET batch processing time: 2.1539978981018066 seconds
+Perch batch processing time: 35.88314342498779 seconds
+
+# 10 min audio 1 thread, batch size = 64
+YAMNet batch processing time: 4.718485116958618 seconds
+VGGish batch processing time: 15.175119161605835 seconds
+BirdNET batch processing time: 3.06388783454895 seconds
+Perch batch processing time: 36.73869490623474 seconds
+
+# 10 min 16 threads, batch size = 32
+YAMNet batch processing time: 6.805267810821533 seconds
+VGGish batch processing time: 9.90481686592102 seconds
+BirdNET batch processing time: 2.9302189350128174 seconds
+Perch batch processing time: 17.076513051986694 seconds
+
+# 10 min 16 threads, batch size = 64
+YAMNet batch processing time: 7.30564546585083 seconds
+VGGish batch processing time: 9.924951791763306 seconds
+BirdNET batch processing time: 4.025118112564087 seconds
+Perch batch processing time: 15.414696455001831 seconds
+
+# 1hr of audio 1 thread, batch size = 32
+YAMNet batch processing time: 26.373422622680664 seconds
+VGGish batch processing time: 84.35902094841003 seconds
+BirdNET batch processing time: 8.598920345306396 seconds
+Perch batch processing time: 198.33394289016724 seconds
+
+# 1hr of audio 16 threads, batch size = 32 <--- USE THIS? 
+YAMNet batch processing time: 44.121607065200806 seconds
+VGGish batch processing time: 56.96380305290222 seconds
+BirdNET batch processing time: 11.815330028533936 seconds
+Perch batch processing time: 93.90980958938599 seconds
+
+# 1hr of audio 16 threads, batch size = 64
+YAMNet batch processing time: 44.54791569709778 seconds
+VGGish batch processing time: 57.272849798202515 seconds
+BirdNET batch processing time: 12.709004402160645 seconds
+Perch batch processing time: 77.0139672756195 seconds
+"""
