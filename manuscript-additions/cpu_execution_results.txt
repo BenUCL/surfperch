@@ -28,8 +28,8 @@ Perch batch processing time: 86.46261835098267 seconds
 
 
 Conclusion:
-- Used 1 hr of audio and 16 threads to be as close to real world as possible (above). 1 hr also provides a better
-    average.
+- Used 1 hr of audio and 16 threads to simulate real world used which would run many hours through each (result above). 
+- Using 1 hr also provides a better average.
 - Below, found threads and batch size impacts results in inconsistant ways.
 - Perch seems to have small set up cost which is negligible when inferencing over real world applicable 
     lengths (hrs not seconds to mins), but is the slowest overall.
