@@ -21,7 +21,7 @@ tf.config.threading.set_intra_op_parallelism_threads(NUM_THREADS)
 tf.config.threading.set_inter_op_parallelism_threads(NUM_THREADS)
 
 # Batch sizes to iterate over
-BATCH_SIZES = [8, 32, 64, 128]
+BATCH_SIZES = [8, 16, 32, 64, 128]
 
 # Find base diectory path
 base_dir = os.getenv('BASE_DIR')
