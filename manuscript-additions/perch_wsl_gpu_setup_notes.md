@@ -67,7 +67,7 @@ sudo apt install ffmpeg libsndfile1
     ```bash
     poetry run jupyter notebook
     ```
-    Open a Jupyter notebook `.ipynb` file and select the `perch-kernel-v1` kernel to test.
+    Or, open a Jupyter notebook `.ipynb` file and select the `perch-kernel-v1` kernel to test.
 
 5. **Check GPU Access in WSL**:
     Check GPU visibility in WSL:
