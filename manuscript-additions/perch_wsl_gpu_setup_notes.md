@@ -1,8 +1,9 @@
 
 # TensorFlow GPU Setup Guide on WSL (Windows Subsystem for Linux)
 
-## Notes to future self
-- The cuda toolkit and cuDNN versions were set to match TF v2.13.0 for Perch system wide. This might not be compatible with futere projects. However, anaconda seems to be able to set these version within it and still work, at least if installing the latest version of TF for WSL from: https://www.tensorflow.org/install/pip
+## Notes
+- 10/05/2024, the perch repo updated at some point from tf v2.13.0 to tf v2.15.0. The cuda software versions are now incompatible and the gpu can't be found. This doc needs updating to the version which work with tf 2.15.0
+- The cuda toolkit and cuDNN versions were set to match TF v2.13.0 for Perch system wide. This might not be compatible with future projects. However, anaconda seems to be able to set these version within it and still work, at least if installing the latest version of TF for WSL from: https://www.tensorflow.org/install/pip
 
 ## Prerequisites
 - **Windows 10/11**: This guide is based on Windows 11, but the steps should be similar for Windows 10.
@@ -55,10 +56,6 @@ sudo apt install ffmpeg libsndfile1
     ```bash
     poetry show
     ```
-    Run Jupyter Notebook:
-    ```bash
-    poetry run jupyter notebook
-    ```
     For the first time, set up a kernel for Jupyter:
     ```bash
     poetry run python -m ipykernel install --user --name=perch-kernel-v1 --display-name="perch-kernel-v1"
@@ -81,8 +78,13 @@ sudo apt install ffmpeg libsndfile1
 
 6. **Install NVIDIA Toolkit and cuDNN**:
     - **CUDA Toolkit Installation**:
-        1. Navigate to the [CUDA Toolkit 11.8 Download Page](https://developer.nvidia.com/cuda-11-8-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=WSL-Ubuntu&target_version=2.0&target_type=deb_local) and follow the instructions for WSL Ubuntu.
-        2. Run the following commands to download and install the CUDA Toolkit:
+        1. First, check if nvcc is installed, if it is skip to cuDNN Installation:
+            ```
+            nvcc --version
+            ```
+           This will display the CUDA compiler version, confirming it is installed. If not installed continue below.
+        2. Navigate to the [CUDA Toolkit 11.8 Download Page](https://developer.nvidia.com/cuda-11-8-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=WSL-Ubuntu&target_version=2.0&target_type=deb_local) and follow the instructions for WSL Ubuntu.
+        3. Run the following commands to download and install the CUDA Toolkit:
             ```
             wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
             sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
@@ -92,7 +94,7 @@ sudo apt install ffmpeg libsndfile1
             sudo apt-get update
             sudo apt-get -y install cuda-11-8
             ```
-        3. Update your `PATH` to include CUDA binaries:
+        4. Update your `PATH` to include CUDA binaries:
             ```
             export PATH=/usr/local/cuda/bin:$PATH
             source ~/.bashrc
@@ -105,14 +107,14 @@ sudo apt install ffmpeg libsndfile1
             ```
            Write and exit, then apply these changes system wide with `source ~/.bashrc`.
 
-        4. Verify CUDA installation:
+        5. Verify CUDA installation:
             ```
             nvcc --version
             ```
            This should display the CUDA compiler version, confirming a successful installation.
 
     - **cuDNN Installation**:
-        1. Download the cuDNN package for Ubuntu 22.04 from the [NVIDIA cuDNN Archive](https://developer.nvidia.com/rdp/cudnn-archive).
+        1. Download the cuDNN package for Ubuntu 22.04 from the [NVIDIA cuDNN Archive](https://developer.nvidia.com/rdp/cudnn-archive). Select: `Download cuDNN v8.6.0 (October 3rd, 2022), for CUDA 11.x` and then `Local Installer for Ubuntu22.04 x86_64 (Deb)`. Make sure this gets saved to the downloads folder in step 2 below (otherwise navigate to where it was saved instead).
         2. Install the downloaded package using `dpkg`:
             ```
             cd /mnt/c/Users/<YourUsername>/Downloads
