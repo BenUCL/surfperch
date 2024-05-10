@@ -2,7 +2,7 @@
 # TensorFlow GPU Setup Guide on WSL (Windows Subsystem for Linux)
 
 ## Notes
-- 10/05/2024, the perch repo updated at some point from tf v2.13.0 to tf v2.15.0. The cuda software versions are now incompatible and the gpu can't be found. This doc needs updating to the version which work with tf 2.15.0
+- 10/05/2024, the perch repo updated at some point from tf v2.13.0 to tf v2.15.0. The cuda software versions are now incompatible and the gpu can't be found. This doc needs updating to the versions which work with tf 2.15.0
 - The cuda toolkit and cuDNN versions were set to match TF v2.13.0 for Perch system wide. This might not be compatible with future projects. However, anaconda seems to be able to set these version within it and still work, at least if installing the latest version of TF for WSL from: https://www.tensorflow.org/install/pip
 
 ## Prerequisites
